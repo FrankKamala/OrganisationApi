@@ -1,3 +1,5 @@
+SET MODE PostgreSQL;
+
 CREATE DATABASE org_api;
 \c org_api;
 
