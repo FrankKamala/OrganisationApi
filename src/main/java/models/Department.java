@@ -13,4 +13,37 @@ public class Department {
         this.noOfEmployees = noOfEmployees;
     }
 
+
+    public void setName(String name) {
+        this.name = name;
+    }
+    public String getName() {
+        return name;
+    }
+
+
+    public String getDescription() {
+        return description;
+    }
+
+    public int getNoOfEmployees() {
+        return noOfEmployees;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+
+
+    public void setNoOfEmployees(int noOfEmployees) { this.noOfEmployees = noOfEmployees; }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
 }
