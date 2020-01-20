@@ -8,6 +8,9 @@ import exceptions.ApiException;
 import models.Department;
 import models.News;
 import models.Users;
+
+import java.util.List;
+
 import static spark.Spark.*;
 
 import static spark.Spark.get;
@@ -22,12 +25,12 @@ public class App {
         Sql2oNewsDao newsDao;
         Connection conn;
         Gson gson = new Gson();
-        // staticFileLocation("/public");
-        //        String connectionString = "jdbc:postgresql://localhost:5432/jadle";
+
 
         staticFileLocation("/public");
-        String connectionString = "jdbc:postgresql://localhost:5432/org_api";
-        Sql2o sql2o = new Sql2o(connectionString, "kamala", "unknown");
+        String connectionString = "jdbc:h2:~/OrgApi.db;INIT=RUNSCRIPT from 'classpath:db/create.sql'";
+        Sql2o sql2o = new Sql2o(connectionString, "", "");
+
 
         departmentDao = new Sql2oDepartmentDao(sql2o);
         usersDao = new Sql2oUsersDao(sql2o);
@@ -48,6 +51,27 @@ public class App {
         get("/departments/:id", "application/json", (req, res) -> {
             int departmentId = Integer.parseInt(req.params("id"));
             return gson.toJson(departmentDao.findById(departmentId));
+        });
+
+        //
+        post("/departments/:departmentId/news/new", "application/json", (req, res) -> {
+            int departmentId = Integer.parseInt(req.params("departmentId"));
+            News news = gson.fromJson(req.body(), News.class);
+            news.setDepartmentId(departmentId); //we need to set this separately because it comes from our route, not our JSON input.
+            newsDao.add(news);
+            res.status(201);
+            return gson.toJson(news);
+        });
+
+        get("/departments/:id/news", "application/json", (req, res) -> {
+            int departmentId = Integer.parseInt(req.params("id"));
+            Department departmentToFind = departmentDao.findById(departmentId);
+            List<News> allNews;
+            if (departmentToFind == null){
+                throw new ApiException(404, String.format("No department with that id: \"%s\" Here", req.params("id")));
+            }
+            allNews = newsDao.getAllNewsByDepartment(departmentId);
+            return gson.toJson(allNews);
         });
 
     }
