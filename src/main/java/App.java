@@ -9,7 +9,9 @@ import models.Department;
 import models.News;
 import models.Users;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static spark.Spark.*;
 
@@ -63,6 +65,7 @@ public class App {
             return gson.toJson(news);
         });
 
+
         get("/departments/:id/news", "application/json", (req, res) -> {
             int departmentId = Integer.parseInt(req.params("id"));
             Department departmentToFind = departmentDao.findById(departmentId);
@@ -82,6 +85,62 @@ public class App {
 
         get("/users", "application/json", (req, res) -> {
             return gson.toJson(usersDao.getAll());
+        });
+
+        post("/departments/:departmentId/users/:usersId", "application/json", (req, res) -> {
+            int departmentId = Integer.parseInt(req.params("departmentId"));
+            int usersId = Integer.parseInt(req.params("usersId"));
+            Department department = departmentDao.findById(departmentId);
+            Users users = usersDao.findById(usersId);
+
+            if (department != null && users != null){
+                usersDao.addUsersToDepartment(users, department);
+                res.status(201);
+                return gson.toJson(String.format("User '%s' and Department '%s' have been associated",users.getName(), department.getName()));
+            }
+            else {
+                throw new ApiException(404, String.format("Department or Users does not exist"));
+            }
+        });
+
+        get("/departments/:id/users", "application/json", (req, res) -> {
+            int departmentId = Integer.parseInt(req.params("id"));
+            Department departmentToFind = departmentDao.findById(departmentId);
+            if (departmentToFind == null){
+                throw new ApiException(404, String.format("No department with the id: \"%s\" exists here", req.params("id")));
+            }
+            else if (departmentDao.getAllUsersInDepartment(departmentId).size()==0){
+                return "{\"message\":\"No users in this department.\"}";
+            }
+            else {
+                return gson.toJson(departmentDao.getAllUsersInDepartment(departmentId));
+            }
+        });
+
+        //news
+        post("/news/new", "application/json",(req,res) ->{
+            News news = gson.fromJson(req.body(), News.class);
+            newsDao.add(news);
+            res.status(201);
+            return gson.toJson(news);
+        });
+
+        get("/news", "application/json", (req, res) -> {
+            return gson.toJson(newsDao.getAll());
+        });
+        //Re Use Filter
+        exception(ApiException.class, (exception, req, res) -> {
+            ApiException err = exception;
+            Map<String, Object> jsonMap = new HashMap<>();
+            jsonMap.put("status", err.getStatusCode());
+            jsonMap.put("errorMessage", err.getMessage());
+            res.type("application/json");
+            res.status(err.getStatusCode());
+            res.body(gson.toJson(jsonMap));
+        });
+
+        after((req, res) ->{
+            res.type("application/json");
         });
 
     }
