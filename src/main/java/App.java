@@ -73,6 +73,16 @@ public class App {
             allNews = newsDao.getAllNewsByDepartment(departmentId);
             return gson.toJson(allNews);
         });
+        post("/users/new", "application/json", (req, res) -> {
+            Users users = gson.fromJson(req.body(), Users.class);
+            usersDao.add(users);
+            res.status(201);
+            return gson.toJson(users);
+        });
+
+        get("/users", "application/json", (req, res) -> {
+            return gson.toJson(usersDao.getAll());
+        });
 
     }
 
